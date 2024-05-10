@@ -136,4 +136,67 @@ WHERE teacher_number not in (
 )
 ORDER BY surname, first_name, teacher_number
 
+--15. List all courses (course name) that have been given by different teachers who are working at different campuses. Example of such course: There exists two course instances of the course. The first one is given by teacher A who is working at campus 1. The second one is given by teacher B who is working at campus 2. Hint: here you might need a JOIN operation, a subquery, grouping, aggregate function etc.
 
+SELECT DISTINCT c.course_name
+FROM Course c
+JOIN CourseInstance ci1 ON c.course_code = ci1.course_code
+JOIN Teacher t1 ON ci1.teacher_number = t1.teacher_number
+JOIN Campus cp1 ON t1.campus_code = cp1.campus_code
+JOIN CourseInstance ci2 ON c.course_code = ci2.course_code
+JOIN Teacher t2 ON ci2.teacher_number = t2.teacher_number
+JOIN Campus cp2 ON t2.campus_code = cp2.campus_code
+WHERE ci1.instance_number <> ci2.instance_number 
+  AND t1.teacher_number <> t2.teacher_number
+  AND cp1.campus_code <> cp2.campus_code
+ORDER BY c.course_name
+
+
+--16. Display the gender distribution of students in the following way (sort the result by "%" in descending order): gender 	%
+- - - - - - - - - - - -
+M		53.8
+F 		46.2
+
+SELECT gender, CAST(Round(Count(Gender) * 100.0 / (SELECT COUNT(*) FROM Student WHERE gender is not null),1) AS DECIMAL (4,1)) AS '%'
+From Student
+WHERE gender is not null
+GROUP BY gender
+
+--17. Display the gender distribution of students in the following way:
+Female 	Male
+- - - - - - - - - - - -
+46.2 %	 	53.8 %
+
+SELECT CONCAT(CAST(ROUND(SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),1) AS DECIMAL(4,1)), ' %') as Female, 
+ CONCAT(CAST(ROUND(SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),1) AS DECIMAL(4,1)), ' %') as Male
+FROM Student
+
+--18. Display student number and average grade of the student(s) who has/have the highest average grade. Display the average grade with two decimal places.
+
+SELECT student_number, CAST(ROUND(AVG(grade)*1.0,2) AS DECIMAL(4,2)) as average_grage
+FROM CourseGrade
+GROUP BY student_number
+HAVING AVG(grade) >= 
+(SELECT MAX(avg_grade) FROM (SELECT AVG (grade) as avg_grade FROM CourseGrade GROUP BY student_number) as sub_query)
+
+--19. Display how many teachers were born in each decade. Sort the result by decade in ascending order. See the sample query results on how to display the result. Hint: In this task, you do not necessarily find all the needed syntax from the SQL DML Quick Reference Guide.
+
+SELECT CASE 
+	WHEN (YEAR(birth_date) >= 1940 and YEAR(birth_date) < 1950) THEN '40s'
+	WHEN (YEAR(birth_date) >= 1950 and YEAR(birth_date) < 1960) THEN '50s'
+	WHEN (YEAR(birth_date) >= 1960 and YEAR(birth_date) < 1970) THEN '60s'
+	WHEN (YEAR(birth_date) >= 1970 and YEAR(birth_date) < 1980) THEN '70s'
+	WHEN (YEAR(birth_date) >= 1980 and YEAR(birth_date) < 1990) THEN '80s'
+	ELSE 'unknown'
+	END as decade, 
+	COUNT(*) as "teachers born"
+FROM Teacher
+GROUP BY 
+CASE 
+	WHEN (YEAR(birth_date) >= 1940 and YEAR(birth_date) < 1950) THEN '40s'
+	WHEN (YEAR(birth_date) >= 1950 and YEAR(birth_date) < 1960) THEN '50s'
+	WHEN (YEAR(birth_date) >= 1960 and YEAR(birth_date) < 1970) THEN '60s'
+	WHEN (YEAR(birth_date) >= 1970 and YEAR(birth_date) < 1980) THEN '70s'
+	WHEN (YEAR(birth_date) >= 1980 and YEAR(birth_date) < 1990) THEN '80s'
+	ELSE 'unknown'
+	END
