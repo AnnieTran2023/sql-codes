@@ -86,3 +86,62 @@ FROM Student as s
 JOIN CourseGrade AS cg ON s.student_number = cg.student_number
 WHERE grade = 3
 ORDER BY s.surname, s.first_name, s.student_number
+
+--11. List all the teachers (teacher number, surname, first name, month name of the grade date) who have evaluated a course in May. Rename the last column as "Grade month". Sort the result by teacher number in ascending order.
+
+SELECT t.teacher_number, t.surname, t.first_name, DATENAME(MONTH,cg.grade_date) as "Grade Month"
+FROM Teacher AS t
+JOIN CourseGrade AS cg ON t.teacher_number = cg.examiner
+WHERE DATENAME(MONTH,cg.grade_date) = 'May'
+ORDER BY teacher_number
+
+--12. How are the average grade and the total number of grades distributed between female and male students? Display gender, average grade (with 2 decimal places) and the number of grades. Rename the last two columns as "Average grade" and "Number of grades". Sort by "Average grade" in descending order.
+
+SELECT s.gender, CAST((SUM(cg.grade)*1.00/COUNT(grade)) AS decimal(5,2)) AS "Average grade", COUNT(grade) AS "Number of grades"
+FROM CourseGrade as cg
+JOIN Student as s ON s.student_number = cg.student_number
+WHERE grade is not null
+GROUP BY gender
+ORDER BY "Average grade" DESC
+
+--13. Create a Cartesian product using the tables Campus and AcademicAdvisor, without any duplicate entries. Display campus name and teacher number. Sort the result by (campus name, teacher number) in ascending order.
+
+SELECT DISTINCT campus_name, teacher_number
+FROM Campus 
+CROSS JOIN AcademicAdvisor 
+ORDER BY campus_name, teacher_number
+
+--14. List the courses that students have failed due to an academic misconduct incident. Display course code, instance number, course name, student number, surname, first name, and misconduct description.
+
+SELECT mi.course_code, instance_number, course_name, mi.student_number, surname, first_name, mt.description
+FROM MisconductIncident as mi
+JOIN MisconductType as mt ON mi.misconduct_code = mt.misconduct_code
+JOIN Course as c ON c.course_code = mi.course_code
+JOIN Student as s ON s.student_number = mi.student_number
+
+--15. List all the students (student number, surname, first name, disciplinary sanction, misconduct description) who have got a written warning due to an academic misconduct incident.
+
+SELECT mi.student_number, surname, first_name, st.description, mt.description
+FROM MisconductIncident as mi
+JOIN Student as s ON S.student_number = MI.student_number
+JOIN MisconductType as mt ON mi.misconduct_code = mt.misconduct_code
+JOIN SanctionType as st ON st.sanction_code = mi.sanction_code
+WHERE st.description = 'Written warning'
+
+--16. What is the prevalence of academic misconduct at Takkula University? Find out the percentage of students who have been penalized due to an academic misconduct incident. Display the percentage with one decimal place. Rename the column as "Misconduct %".
+
+SELECT CAST(ROUND(COUNT(*)*100.0/(SELECT COUNT(*) FROM Student),1) AS decimal(5,1)) as "Misconduct %"
+FROM MisconductIncident
+
+--17. List all the courses (course name, teacher number, teacher name) where the person in charge has also been the teacher of an instance of the course. Concatenate surname and first name "Person in charge teaching". Sort the result by (surname, first name, teacher number) in ascending order.
+
+SELECT c.course_name,
+	CONCAT(t.surname, ', ', t.first_name) AS teacher_name,
+       c.person_in_charge AS teacher_number
+      
+FROM Course AS c
+JOIN Teacher AS t ON c.person_in_charge = t.teacher_number
+JOIN CourseInstance AS ci ON c.course_code = ci.course_code AND c.person_in_charge = ci.teacher_number
+ORDER BY t.surname, t.first_name, c.person_in_charge;
+ 
+
