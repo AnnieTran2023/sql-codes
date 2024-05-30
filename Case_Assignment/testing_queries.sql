@@ -32,3 +32,34 @@ WHERE ea.eventName =  'Bluegrass Evening' AND ea.eventDate = '2024-07-08';
 SELECT EventName
 FROM Event
 WHERE YEAR(EventDate) = 2024;
+
+--6. What dance performances are coming up this year?
+
+SELECT EventName
+FROM Event
+WHERE EventType = 'dance';
+
+--7. How many tickets have been sold so far for Quest crew's dance performance scheduled for 08.07.2024?
+
+SELECT SUM(NumberOfTickets) AS 'Number of tickets for Quest crew dance performance on 08.07.2024'
+FROM Booking as b
+JOIN Event AS e ON e.EventName = b.EventName
+JOIN Event_Artist AS ea ON ea.EventName = e.EventName
+WHERE ea.ArtistName =  'Quest crew' AND e.EventDate = '2024-07-08';
+
+--8. How many tickets remain for Blind Channel's concert on 2.9.2024?
+
+SELECT (v.Capacity - COALESCE(SUM(b.NumberOfTickets), 0)) AS RemainingTickets
+FROM Event AS e
+JOIN Event_Artist AS ea ON e.EventName = ea.EventName AND e.EventDate = ea.EventDate
+JOIN Venue AS v ON e.VenueName = v.VenueName
+LEFT JOIN Booking AS b ON e.EventName = b.EventName AND e.EventDate = b.EventDate
+WHERE ea.ArtistName = 'Blind Channel' AND e.EventDate = '2024-09-02'
+GROUP BY v.Capacity; 
+
+--9. How much revenue has the Louisville Culture Association generated from ticket sales this year?
+
+SELECT SUM(e.Price * b.NumberOfTickets) AS 'Ticket Revenue'
+FROM Event e
+JOIN Booking b ON e.EventName = b.EventName AND e.EventDate = b.EventDate
+WHERE YEAR(e.EventDate) = 2024;
