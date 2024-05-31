@@ -63,3 +63,13 @@ SELECT SUM(e.Price * b.NumberOfTickets) AS 'Ticket Revenue'
 FROM Event e
 JOIN Booking b ON e.EventName = b.EventName AND e.EventDate = b.EventDate
 WHERE YEAR(e.EventDate) = 2024;
+
+--10. Which artist has sold the most tickets this year? Please note that the count should include all performances by the artist this year.
+
+SELECT ea.ArtistName, SUM(b.NumberOfTickets) AS TotalTicketsSold
+FROM Event_Artist ea
+JOIN Booking b On ea.EventName = b.EventName AND ea.EventDate = b.EventDate
+WHERE YEAR(ea.EventDate) = 2024 AND b.Status = 'sold'
+GROUP BY ea.ArtistName
+ORDER BY TotalTicketsSold DESC; 
+
